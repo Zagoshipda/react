@@ -1,7 +1,10 @@
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import Content from './components/Content'
+import Control from './components/Control';
+import CreateContent from './components/CreateContent';
 // import Default from './components/default'
+import ReadContent from './components/ReadContent'
 import Subject from './components/Subject'
 import TOC from './components/TOC'
 // import './App.css';
@@ -9,8 +12,10 @@ import TOC from './components/TOC'
 class App extends Component {
   constructor(props){
     super(props);
+    // this may NOT influence on UI so put it ouside of state.
+    this.max_content_id = 3;
     this.state = {
-      mode:'welcome',
+      mode:'create',
       selected_content_id:3,
       welcome:{title:'Welcome', desc:'Hello, React...!!'},
       subject:{title:'WEB', sub:'World Wide Web!'},
@@ -24,11 +29,13 @@ class App extends Component {
 
   render() {
     console.log('App render');
-    var _title, _desc = null;
+    var _title, _desc, _article = null;
     if(this.state.mode === 'welcome'){
       _title = this.state.welcome.title;
       _desc = this.state.welcome.desc;
-    }else if(this.state.mode === 'read'){
+      _article = <ReadContent title={_title} desc={_desc}></ReadContent>
+    }
+    else if(this.state.mode === 'read'){
       var i = 0;
       while(i < this.state.contents.length){
         var data = this.state.contents[i];
@@ -39,6 +46,33 @@ class App extends Component {
         }
         i = i + 1;
       }
+      _article = <ReadContent title={_title} desc={_desc}></ReadContent>
+    }
+    else if(this.state.mode === 'create'){
+      _article = <CreateContent
+        onSubmit={
+          function(_title, _desc){
+            this.max_content_id = this.max_content_id + 1;
+            // (1)
+            // this.state.contents.push(
+            //   {id:this.max_content_id, title:_title, desc:_desc}
+            // );
+            // (2) use concat(a new one) rather than push(change original).
+            var _contents = this.state.contents.concat(
+              {id:this.max_content_id, title:_title, desc:_desc}
+            );
+            // (3) (use replica) if object, use Object.assign({}, var).
+            // var newContents = Array.from(this.state.contents);
+            // newContents.push(
+            //   {id:this.max_content_id, title:_title, desc:_desc}
+            // );
+            this.setState({
+              contents:_contents
+            });
+            console.log(_title, _desc);
+          }.bind(this)
+        }
+      ></CreateContent>
     }
     return (
       <div className="App">
@@ -68,9 +102,20 @@ class App extends Component {
         >
         </TOC>
 
-        <Content 
-          title={_title} desc={_desc}>
-        </Content>
+        <Control
+          onChangeMode={
+            function(_mode){
+              this.setState({
+                mode:_mode
+              })
+            }.bind(this)
+          }
+        >
+
+        </Control>
+
+        {_article}
+
       </div>
     );
   }
